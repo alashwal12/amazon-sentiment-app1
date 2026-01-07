@@ -57,21 +57,37 @@ def plot_confusion_matrix(cm: np.ndarray, labels: list[str]):
     fig.patch.set_alpha(0.0)
     ax.patch.set_alpha(0.0)
 
-    im = ax.imshow(cm, cmap='PuBuGn') 
+    # Use a colormap that fits well, 'Blues' or 'Greens' are standard. 
+    # 'PuBuGn' was fine but we need to handle text contrast.
+    im = ax.imshow(cm, cmap='Blues', interpolation='nearest') 
     
     ax.set_xticks(range(len(labels)))
     ax.set_yticks(range(len(labels)))
     ax.set_xticklabels([l.title() for l in labels], rotation=25, ha="right", color="white")
     ax.set_yticklabels([l.title() for l in labels], color="white")
     
+    # Determine threshold for text color (white on dark, black on light)
+    threshold = cm.max() / 2.
+    
     for i in range(len(labels)):
         for j in range(len(labels)):
-            text = ax.text(j, i, str(cm[i, j]), ha="center", va="center", color="white", fontweight='bold')
+            val = cm[i, j]
+            # If value is high (dark cell), use white. Else black/dark grey.
+            color = "white" if val > threshold else "black"
+            if val > threshold:
+                color = "white"
+            else:
+                # Use a dark distinguishable color for light backgrounds
+                color = "#202124" 
+            
+            text = ax.text(j, i, str(val), ha="center", va="center", 
+                           color=color, fontweight='bold', fontsize=10)
 
-    ax.set_xlabel("Predicted", color="#b0b0b0")
-    ax.set_ylabel("Actual", color="#b0b0b0")
+    ax.set_xlabel("Predicted", color="#b0b0b0", labelpad=10)
+    ax.set_ylabel("Actual", color="#b0b0b0", labelpad=10)
     ax.set_title("Confusion Matrix", color="white", fontweight='bold', pad=20)
     
+    # Hide spines
     for spine in ax.spines.values():
         spine.set_visible(False)
         
@@ -256,13 +272,13 @@ with tab_pred:
     # 1. Quick Fill Buttons
     st.markdown("##### Try an example:")
     c1, c2, c3 = st.columns(3)
-    if c1.button("Happy �"):
+    if c1.button("Positive 🎉"):
         st.session_state.review_text = "I absolutely love this product! It works wonders and arrived fast."
         st.rerun()
     if c2.button("Neutral 😐"):
         st.session_state.review_text = "The product is okay. It does what it says but quality could be better."
         st.rerun()
-    if c3.button("Angry 😡"):
+    if c3.button("Negative 😡"):
         st.session_state.review_text = "Worst purchase ever. Broken on arrival and terrible customer service."
         st.rerun()
 
